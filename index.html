@@ -26,7 +26,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .btns .main{grid-column:1/-1}
 .hint{color:var(--muted);font-size:13px;margin:6px 0 0}
 .preview{padding:24px;display:flex;flex-direction:column;align-items:center;gap:24px}
-.sheet{background:#fff;width:min(100%,var(--pw,8.5in));min-height:var(--ph,11in);padding:.6in;box-shadow:0 2px 12px rgba(20,33,61,.18);font-family:"Newsreader",Georgia,serif;font-size:18px;color:#111}
+.sheet{background:#fff;position:relative;overflow:hidden;flex:none;width:var(--pw,8.5in);height:calc(var(--ph,11in) - 1px);padding:.6in;box-shadow:0 2px 12px rgba(20,33,61,.18);font-family:"Newsreader",Georgia,serif;font-size:18px;color:#111}
 .sheet h2{font-size:26px;margin:0 0 6px;font-weight:600}
 .sheet .who{display:flex;justify-content:space-between;gap:24px;margin:14px 0 6px;font-size:16px}
 .sheet .who span{flex:1;border-bottom:1px solid #111;padding-bottom:14px}
@@ -39,14 +39,16 @@ ol.grid{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-col
 .a{display:inline-block;min-width:3.2ch;border-bottom:1.5px solid #111;text-align:center;font-weight:600;color:var(--j1)}
 .nl{width:100%;display:block;margin-top:2px;color:#111}
 .j1{stroke:var(--j1)}.j2{stroke:var(--j2)}
-@media(max-width:860px){.app{grid-template-columns:1fr}.controls{position:static;height:auto}.sheet{padding:20px;min-height:0;font-size:16px}}
+.pg{position:absolute;left:0;right:0;bottom:.3in;text-align:center;font:12px "Instrument Sans",sans-serif;color:#666}
+#meas{position:absolute;left:-99999px;top:0;visibility:hidden}
+#meas .sheet{height:auto;overflow:visible}
+@media(max-width:860px){.app{grid-template-columns:1fr}.controls{position:static;height:auto}.preview{padding:12px}}
 @media print{
- @page{margin:.5in}
  html,body{height:auto;background:#fff}.controls{display:none}
  .app{display:block;min-height:0;height:auto}
  .preview{padding:0;gap:0;display:block;min-height:0}
- .sheet{box-shadow:none;width:auto;min-height:0;padding:0}
- .sheet+.sheet{break-before:page}
+ .sheet{box-shadow:none;zoom:1!important;break-after:page}
+ .sheet:last-child{break-after:auto}
  .q,.nl{break-inside:avoid}
 }
 </style>
@@ -92,6 +94,7 @@ ol.grid{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-col
   <p class="hint" id="msg" role="status"></p>
 </form>
 <main class="preview" id="out"></main>
+<div id="meas" aria-hidden="true"></div>
 </div>
 
 <script>
@@ -130,12 +133,26 @@ function nl(a,b,R,solved){
   return g+'</svg>';
 }
 
-function sheet(s,p,R,key){
-  const items=p.map(([a,b],i)=>`<li><div class="q"><span class="n">${i+1}.</span><span>${term(a)} + ${term(b)} =</span><span class="a">${key?fmt(a+b):'&nbsp;'}</span></div>${s.lines?nl(a,b,R,key):''}</li>`).join('');
-  return`<section class="sheet"><h2>${esc(s.title)}${key?' — Answer key':''}</h2>`+
-    (!key&&s.name?'<div class="who"><span>Name:</span><span>Date:</span></div>':'')+
-    (key&&s.lines?'<p class="legend"><b>Blue</b>: start at 0 and move by the first number. <b>Magenta</b>: move by the second number.</p>':'')+
-    `<ol class="grid" style="--c:${s.cols}">${items}</ol></section>`;
+function sheet(s,p,R,key,start,first,info){
+  const items=p.map(([a,b],i)=>`<li><div class="q"><span class="n">${start+i+1}.</span><span>${term(a)} + ${term(b)} =</span><span class="a">${key?fmt(a+b):'&nbsp;'}</span></div>${s.lines?nl(a,b,R,key):''}</li>`).join('');
+  return`<section class="sheet">`+(first?`<h2>${esc(s.title)}${key?' — Answer key':''}</h2>`:'')+
+    (first&&!key&&s.name?'<div class="who"><span>Name:</span><span>Date:</span></div>':'')+
+    (first&&key&&s.lines?'<p class="legend"><b>Blue</b>: start at 0 and move by the first number. <b>Magenta</b>: move by the second number.</p>':'')+
+    `<ol class="grid" style="--c:${s.cols}${first?'':';margin-top:0'}">${items}</ol>`+(info?`<div class="pg">${info}</div>`:'')+`</section>`;
+}
+let PW=816;
+function paginate(s,p,R,key){
+  const host=$('meas');host.innerHTML=sheet(s,p,R,key,0,true,'');
+  const sh=host.firstElementChild,pad=parseFloat(getComputedStyle(sh).paddingTop);
+  const pr=document.createElement('div');pr.style.cssText='position:absolute;width:var(--pw);height:var(--ph)';host.appendChild(pr);
+  const box=pr.getBoundingClientRect();PW=box.width;pr.remove();
+  const inner=box.height-2*pad-3,top=sh.getBoundingClientRect().top+pad,lis=[...sh.querySelectorAll('li')],c=s.cols,pages=[];
+  let start=0,base=0;
+  for(let i=0;i<lis.length;i+=c){
+    const row=lis.slice(i,i+c),rt=row[0].getBoundingClientRect().top-top,rb=Math.max(...row.map(l=>l.getBoundingClientRect().bottom))-top;
+    if(i>start&&rb-base>inner){pages.push([start,i]);start=i;base=rt}
+  }
+  pages.push([start,lis.length]);host.innerHTML='';return pages;
 }
 const esc=x=>x.replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 
@@ -160,12 +177,16 @@ function tex(s,p){
 
 const PAPER={letter:['8.5in','11in','letterpaper'],a4:['210mm','297mm','a4paper'],legal:['8.5in','14in','legalpaper']};
 document.head.insertAdjacentHTML('beforeend','<style id="pg"></style>');
+function fit(){const z=Math.min(1,($('out').clientWidth-48)/PW)||1;document.querySelectorAll('#out .sheet').forEach(e=>e.style.zoom=z)}
 function render(){
   const s=settings(),p=gen(s),R=range(p),[pw,ph]=PAPER[s.paper];
   document.documentElement.style.setProperty('--pw',pw);
   document.documentElement.style.setProperty('--ph',ph);
-  $('pg').textContent=`@page{size:${pw} ${ph}}`;
-  $('out').innerHTML=sheet(s,p,R,false)+(s.key?sheet(s,p,R,true):'');
+  $('pg').textContent=`@page{size:${pw} ${ph};margin:0}`;
+  const build=key=>{const pages=paginate(s,p,R,key),n=pages.length;
+    return pages.map(([a,b],i)=>sheet(s,p.slice(a,b),R,key,a,i===0,`${key?'Answer key, page':'Page'} ${i+1} of ${n}`)).join('')};
+  $('out').innerHTML=build(false)+(s.key?build(true):'');
+  fit();
 }
 function say(t){$('msg').textContent=t;setTimeout(()=>{$('msg').textContent=''},2500)}
 const cur=()=>{const s=settings();return tex(s,gen(s))};
@@ -177,6 +198,8 @@ $('print').onclick=()=>window.print();
 $('copy').onclick=async()=>{try{await navigator.clipboard.writeText(cur());say('LaTeX copied.')}catch(e){say('Copy blocked. Use Download .tex instead.')}};
 $('dl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([cur()],{type:'text/plain'}));a.download='integer-worksheet.tex';a.click();URL.revokeObjectURL(a.href)};
 render();
+window.addEventListener('resize',fit);
+if(document.fonts)document.fonts.ready.then(render);
 </script>
 </body>
 </html>
