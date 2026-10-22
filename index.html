@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Adding Integers Worksheet Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600&family=Newsreader:opsz,wght@6..72,400;6..72,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#E6EBF0;--panel:#F7F9FB;--ink:#14213D;--muted:#5A6678;--line:#C5CFDA;--j1:#1D5C96;--j2:#B0285B;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 "Instrument Sans",system-ui,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.app{display:grid;grid-template-columns:320px 1fr;min-height:100vh}
+.controls{background:var(--panel);border-right:1px solid var(--line);padding:20px;position:sticky;top:0;height:100vh;overflow:auto}
+.controls h1{font:600 20px/1.2 "Newsreader",Georgia,serif;margin:0 0 16px}
+label{display:block;font-weight:600;margin:12px 0 4px}
+.chk{display:flex;gap:8px;align-items:center;font-weight:400;margin:6px 0}
+input[type=text],input[type=number],select{width:100%;padding:8px;border:1px solid var(--line);border-radius:4px;background:#fff;color:var(--ink);font:inherit}
+fieldset{border:1px solid var(--line);border-radius:4px;margin:14px 0 0;padding:4px 10px 8px}
+legend{font-weight:600;padding:0 4px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+button{font:600 14px "Instrument Sans",sans-serif;padding:9px 12px;border-radius:4px;border:1px solid var(--ink);background:#fff;color:var(--ink);cursor:pointer}
+button.main{background:var(--ink);color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--j1);outline-offset:1px}
+.btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.btns .main{grid-column:1/-1}
+.hint{color:var(--muted);font-size:13px;margin:6px 0 0}
+.preview{padding:24px;display:flex;flex-direction:column;align-items:center;gap:24px}
+.sheet{background:#fff;width:min(100%,8.5in);min-height:11in;padding:.6in;box-shadow:0 2px 12px rgba(20,33,61,.18);font-family:"Newsreader",Georgia,serif;font-size:18px;color:#111}
+.sheet h2{font-size:26px;margin:0 0 6px;font-weight:600}
+.sheet .who{display:flex;justify-content:space-between;gap:24px;margin:14px 0 6px;font-size:16px}
+.sheet .who span{flex:1;border-bottom:1px solid #111;padding-bottom:14px}
+.sheet .who span+span{flex:.5}
+.legend{font-size:14px;color:#444;margin:4px 0 0}
+.legend b:first-child{color:var(--j1)}.legend b:last-child{color:var(--j2)}
+ol.grid{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-columns:repeat(var(--c),1fr);gap:22px 28px}
+.q{display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.n{min-width:2ch;text-align:right;color:#555;font-size:15px}
+.a{display:inline-block;min-width:3.2ch;border-bottom:1.5px solid #111;text-align:center;font-weight:600;color:var(--j1)}
+.nl{width:100%;display:block;margin-top:2px;color:#111}
+.j1{stroke:var(--j1)}.j2{stroke:var(--j2)}
+@media(max-width:860px){.app{grid-template-columns:1fr}.controls{position:static;height:auto}.sheet{padding:20px;min-height:0;font-size:16px}}
+@media print{
+ @page{margin:.5in}
+ body{background:#fff}.controls{display:none}.app{display:block}
+ .preview{padding:0;gap:0;display:block}
+ .sheet{box-shadow:none;width:auto;min-height:0;padding:0}
+ .sheet+.sheet{break-before:page}
+ .q,.nl{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<marker id="j1" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8z" fill="#1D5C96"/></marker>
+<marker id="j2" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0L8 4L0 8z" fill="#B0285B"/></marker>
+</defs></svg>
+
+<div class="app">
+<form class="controls" onsubmit="return false">
+  <h1>Adding integers worksheet</h1>
+  <label for="title">Title</label>
+  <input type="text" id="title" value="Adding Integers">
+  <div class="row">
+    <div><label for="n">Problems</label><input type="number" id="n" min="1" max="60" value="20"></div>
+    <div><label for="max">Largest value</label><input type="number" id="max" min="2" max="30" value="10"></div>
+  </div>
+  <fieldset><legend>Problem types</legend>
+    <label class="chk"><input type="checkbox" id="pp" checked> Positive + positive</label>
+    <label class="chk"><input type="checkbox" id="nn" checked> Negative + negative</label>
+    <label class="chk"><input type="checkbox" id="mx" checked> Opposite signs</label>
+  </fieldset>
+  <label for="cols">Columns</label>
+  <select id="cols"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+  <fieldset><legend>Options</legend>
+    <label class="chk"><input type="checkbox" id="lines" checked> Number line under each problem</label>
+    <label class="chk"><input type="checkbox" id="name" checked> Name and date lines</label>
+    <label class="chk"><input type="checkbox" id="key" checked> Answer key page</label>
+  </fieldset>
+  <label for="seed">Seed</label>
+  <input type="number" id="seed" min="1">
+  <p class="hint">Same seed and settings always give the same worksheet.</p>
+  <div class="btns">
+    <button type="button" class="main" id="print">Print / save as PDF</button>
+    <button type="button" id="new">New problems</button>
+    <button type="button" id="copy">Copy LaTeX</button>
+    <button type="button" id="dl">Download .tex</button>
+  </div>
+  <p class="hint" id="msg" role="status"></p>
+</form>
+<main class="preview" id="out"></main>
+</div>
+
+<script>
+const $=id=>document.getElementById(id), M='\u2212';
+const fmt=n=>n<0?M+(-n):''+n, term=n=>n<0?'('+fmt(n)+')':''+n;
+
+function rng(seed){let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
+
+function settings(){
+  const c=id=>$(id).checked;
+  return{title:$('title').value||'Worksheet',n:Math.max(1,Math.min(60,+$('n').value||20)),max:Math.max(2,Math.min(30,+$('max').value||10)),
+    types:['pp','nn','mx'].filter(c),cols:+$('cols').value,lines:c('lines'),name:c('name'),key:c('key'),seed:+$('seed').value||1};
+}
+
+function gen(s){
+  const types=s.types.length?s.types:['mx'],r=rng(s.seed),ri=(lo,hi)=>lo+Math.floor(r()*(hi-lo+1));
+  const out=[],seen=new Set();let tries=0;
+  while(out.length<s.n&&tries++<2000){
+    const t=types[ri(0,types.length-1)];let a=ri(1,s.max),b=ri(1,s.max);
+    if(t==='nn'){a=-a;b=-b}else if(t==='mx'){if(r()<.5)a=-a;else b=-b}
+    const k=a+','+b;if(seen.has(k)&&tries<1000)continue;seen.add(k);out.push([a,b]);
+  }
+  return out;
+}
+
+function nl(a,b,R,solved){
+  const s=a+b,w=320,pd=12,sc=(w-2*pd)/(2*R),X=v=>pd+(v+R)*sc,st=R>12?(R>25?10:5):1;
+  const arc=(f,t,c,h)=>f===t?'':`<path d="M${X(f)} 30 Q${(X(f)+X(t))/2} ${30-h} ${X(t)} 30" fill="none" stroke-width="2" class="${c}" marker-end="url(#${c})"/>`;
+  let g=`<svg class="nl" viewBox="0 0 ${w} 47" aria-hidden="true"><line x1="3" x2="${w-3}" y1="30" y2="30" stroke="currentColor" stroke-width="1.2"/>`;
+  for(let v=-R;v<=R;v++){
+    const lab=v%st===0;
+    g+=`<line x1="${X(v)}" x2="${X(v)}" y1="${lab?26:28}" y2="${lab?34:32}" stroke="currentColor"/>`;
+    if(lab)g+=`<text x="${X(v)}" y="44" text-anchor="middle" font-size="8" fill="currentColor">${fmt(v)}</text>`;
+  }
+  if(solved)g+=arc(0,a,'j1',26)+arc(a,s,'j2',16);
+  return g+'</svg>';
+}
+
+function sheet(s,p,R,key){
+  const items=p.map(([a,b],i)=>`<li><div class="q"><span class="n">${i+1}.</span><span>${term(a)} + ${term(b)} =</span><span class="a">${key?fmt(a+b):'&nbsp;'}</span></div>${s.lines?nl(a,b,R,key):''}</li>`).join('');
+  return`<section class="sheet"><h2>${esc(s.title)}${key?' — Answer key':''}</h2>`+
+    (!key&&s.name?'<div class="who"><span>Name:</span><span>Date:</span></div>':'')+
+    (key&&s.lines?'<p class="legend"><b>Blue</b>: start at 0 and move by the first number. <b>Magenta</b>: move by the second number.</p>':'')+
+    `<ol class="grid" style="--c:${s.cols}">${items}</ol></section>`;
+}
+const esc=x=>x.replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+
+function range(p){return Math.max(3,...p.map(([a,b])=>Math.max(Math.abs(a),Math.abs(a+b))+1))}
+
+function tex(s,p){
+  const R=range(p),c=s.cols,L=n=>n<0?`(${n})`:`${n}`,te=x=>x.replace(/[&%$#_{}]/g,m=>'\\'+m);
+  const line=()=>`\\\\[2pt]\n\\begin{tikzpicture}[scale=${(15/c/(2*R+2)).toFixed(2)}]\\draw[<->](${-R-1},0)--(${R+1},0);\\foreach\\x in{${-R},...,${R}}{\\draw(\\x,.15)--(\\x,-.15);}`+
+    (R<=12?`\\foreach\\x in{${-R},...,${R}}\\node[below,font=\\tiny]at(\\x,-.15){$\\x$};`:'\\node[below,font=\\tiny]at(0,-.15){$0$};')+'\\end{tikzpicture}\n';
+  let t='\\documentclass[11pt]{article}\n\\usepackage[margin=2cm]{geometry}\n\\usepackage{multicol,enumitem,tikz}\n\\pagestyle{empty}\n\\begin{document}\n'+
+    `\\section*{${te(s.title)}}\n`+(s.name?'Name: \\underline{\\hspace{6cm}} \\hfill Date: \\underline{\\hspace{3cm}}\\\\[1em]\n':'')+
+    `\\begin{multicols}{${c}}\n\\begin{enumerate}[itemsep=1.2em]\n`;
+  p.forEach(([a,b])=>{t+=`\\item $${L(a)}+${L(b)}=$ \\underline{\\hspace{2cm}}\n`+(s.lines?line():'')});
+  t+='\\end{enumerate}\n\\end{multicols}\n';
+  if(s.key){
+    t+=`\\newpage\n\\section*{${te(s.title)} --- Answer key}\n\\begin{multicols}{${Math.max(c,2)}}\n\\begin{enumerate}\n`;
+    p.forEach(([a,b])=>{t+=`\\item $${L(a)}+${L(b)}=${a+b}$\n`});
+    t+='\\end{enumerate}\n\\end{multicols}\n';
+  }
+  return t+'\\end{document}\n';
+}
+
+function render(){
+  const s=settings(),p=gen(s),R=range(p);
+  $('out').innerHTML=sheet(s,p,R,false)+(s.key?sheet(s,p,R,true):'');
+}
+function say(t){$('msg').textContent=t;setTimeout(()=>{$('msg').textContent=''},2500)}
+const cur=()=>{const s=settings();return tex(s,gen(s))};
+
+$('seed').value=Math.floor(Math.random()*9000+1000);
+document.querySelectorAll('.controls input,.controls select').forEach(e=>e.addEventListener('input',render));
+$('new').onclick=()=>{$('seed').value=Math.floor(Math.random()*9000+1000);render()};
+$('print').onclick=()=>window.print();
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(cur());say('LaTeX copied.')}catch(e){say('Copy blocked. Use Download .tex instead.')}};
+$('dl').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([cur()],{type:'text/plain'}));a.download='integer-worksheet.tex';a.click();URL.revokeObjectURL(a.href)};
+render();
+</script>
+</body>
+</html>
