@@ -42,8 +42,9 @@ ol.grid{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-col
 @media(max-width:860px){.app{grid-template-columns:1fr}.controls{position:static;height:auto}.sheet{padding:20px;min-height:0;font-size:16px}}
 @media print{
  @page{margin:.5in}
- body{background:#fff}.controls{display:none}.app{display:block}
- .preview{padding:0;gap:0;display:block}
+ html,body{height:auto;background:#fff}.controls{display:none}
+ .app{display:block;min-height:0;height:auto}
+ .preview{padding:0;gap:0;display:block;min-height:0}
  .sheet{box-shadow:none;width:auto;min-height:0;padding:0}
  .sheet+.sheet{break-before:page}
  .q,.nl{break-inside:avoid}
