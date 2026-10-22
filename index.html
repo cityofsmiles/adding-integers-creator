@@ -26,7 +26,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .btns .main{grid-column:1/-1}
 .hint{color:var(--muted);font-size:13px;margin:6px 0 0}
 .preview{padding:24px;display:flex;flex-direction:column;align-items:center;gap:24px}
-.sheet{background:#fff;width:min(100%,8.5in);min-height:11in;padding:.6in;box-shadow:0 2px 12px rgba(20,33,61,.18);font-family:"Newsreader",Georgia,serif;font-size:18px;color:#111}
+.sheet{background:#fff;width:min(100%,var(--pw,8.5in));min-height:var(--ph,11in);padding:.6in;box-shadow:0 2px 12px rgba(20,33,61,.18);font-family:"Newsreader",Georgia,serif;font-size:18px;color:#111}
 .sheet h2{font-size:26px;margin:0 0 6px;font-weight:600}
 .sheet .who{display:flex;justify-content:space-between;gap:24px;margin:14px 0 6px;font-size:16px}
 .sheet .who span{flex:1;border-bottom:1px solid #111;padding-bottom:14px}
@@ -72,6 +72,8 @@ ol.grid{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-col
   </fieldset>
   <label for="cols">Columns</label>
   <select id="cols"><option>1</option><option selected>2</option><option>3</option><option>4</option></select>
+  <label for="paper">Paper size</label>
+  <select id="paper"><option value="letter" selected>Letter (8.5 × 11 in)</option><option value="a4">A4 (210 × 297 mm)</option><option value="legal">Legal (8.5 × 14 in)</option></select>
   <fieldset><legend>Options</legend>
     <label class="chk"><input type="checkbox" id="lines" checked> Number line under each problem</label>
     <label class="chk"><input type="checkbox" id="name" checked> Name and date lines</label>
@@ -100,7 +102,7 @@ function rng(seed){let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t
 function settings(){
   const c=id=>$(id).checked;
   return{title:$('title').value||'Worksheet',n:Math.max(1,Math.min(60,+$('n').value||20)),max:Math.max(2,Math.min(30,+$('max').value||10)),
-    types:['pp','nn','mx'].filter(c),cols:+$('cols').value,lines:c('lines'),name:c('name'),key:c('key'),seed:+$('seed').value||1};
+    types:['pp','nn','mx'].filter(c),cols:+$('cols').value,paper:$('paper').value,lines:c('lines'),name:c('name'),key:c('key'),seed:+$('seed').value||1};
 }
 
 function gen(s){
@@ -142,7 +144,7 @@ function tex(s,p){
   const R=range(p),c=s.cols,L=n=>n<0?`(${n})`:`${n}`,te=x=>x.replace(/[&%$#_{}]/g,m=>'\\'+m);
   const line=()=>`\\\\[2pt]\n\\begin{tikzpicture}[scale=${(15/c/(2*R+2)).toFixed(2)}]\\draw[<->](${-R-1},0)--(${R+1},0);\\foreach\\x in{${-R},...,${R}}{\\draw(\\x,.15)--(\\x,-.15);}`+
     (R<=12?`\\foreach\\x in{${-R},...,${R}}\\node[below,font=\\tiny]at(\\x,-.15){$\\x$};`:'\\node[below,font=\\tiny]at(0,-.15){$0$};')+'\\end{tikzpicture}\n';
-  let t='\\documentclass[11pt]{article}\n\\usepackage[margin=2cm]{geometry}\n\\usepackage{multicol,enumitem,tikz}\n\\pagestyle{empty}\n\\begin{document}\n'+
+  let t='\\documentclass[11pt]{article}\n\\usepackage['+PAPER[s.paper][2]+',margin=2cm]{geometry}\n\\usepackage{multicol,enumitem,tikz}\n\\pagestyle{empty}\n\\begin{document}\n'+
     `\\section*{${te(s.title)}}\n`+(s.name?'Name: \\underline{\\hspace{6cm}} \\hfill Date: \\underline{\\hspace{3cm}}\\\\[1em]\n':'')+
     `\\begin{multicols}{${c}}\n\\begin{enumerate}[itemsep=1.2em]\n`;
   p.forEach(([a,b])=>{t+=`\\item $${L(a)}+${L(b)}=$ \\underline{\\hspace{2cm}}\n`+(s.lines?line():'')});
@@ -155,8 +157,13 @@ function tex(s,p){
   return t+'\\end{document}\n';
 }
 
+const PAPER={letter:['8.5in','11in','letterpaper'],a4:['210mm','297mm','a4paper'],legal:['8.5in','14in','legalpaper']};
+document.head.insertAdjacentHTML('beforeend','<style id="pg"></style>');
 function render(){
-  const s=settings(),p=gen(s),R=range(p);
+  const s=settings(),p=gen(s),R=range(p),[pw,ph]=PAPER[s.paper];
+  document.documentElement.style.setProperty('--pw',pw);
+  document.documentElement.style.setProperty('--ph',ph);
+  $('pg').textContent=`@page{size:${pw} ${ph}}`;
   $('out').innerHTML=sheet(s,p,R,false)+(s.key?sheet(s,p,R,true):'');
 }
 function say(t){$('msg').textContent=t;setTimeout(()=>{$('msg').textContent=''},2500)}
