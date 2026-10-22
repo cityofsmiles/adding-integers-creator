@@ -28,9 +28,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .preview{padding:24px;display:flex;flex-direction:column;align-items:center;gap:24px}
 .sheet{background:#fff;position:relative;overflow:hidden;flex:none;width:var(--pw,8.5in);height:calc(var(--ph,11in) - 1px);padding:.6in;box-shadow:0 2px 12px rgba(20,33,61,.18);font-family:"Newsreader",Georgia,serif;font-size:18px;color:#111}
 .sheet h2{font-size:26px;margin:0 0 6px;font-weight:600}
-.sheet .who{display:flex;justify-content:space-between;gap:24px;margin:14px 0 6px;font-size:16px}
-.sheet .who span{flex:1;border-bottom:1px solid #111;padding-bottom:14px}
-.sheet .who span+span{flex:.5}
+.sheet .who{display:grid;grid-template-columns:2fr 1fr;gap:16px 24px;margin:14px 0 6px;font-size:16px}
+.sheet .who span{border-bottom:1px solid #111;padding-bottom:12px}
 .legend{font-size:14px;color:#444;margin:4px 0 0}
 .legend b:first-child{color:var(--j1)}.legend b:last-child{color:var(--j2)}
 ol.grid{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-columns:repeat(var(--c),1fr);gap:22px 28px}
@@ -79,7 +78,7 @@ ol.grid{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-col
   <select id="paper"><option value="letter" selected>Letter (8.5 × 11 in)</option><option value="a4">A4 (210 × 297 mm)</option><option value="legal">Legal (8.5 × 14 in)</option></select>
   <fieldset><legend>Options</legend>
     <label class="chk"><input type="checkbox" id="lines" checked> Number line under each problem</label>
-    <label class="chk"><input type="checkbox" id="name" checked> Name and date lines</label>
+    <label class="chk"><input type="checkbox" id="name" checked> Student info lines (name, date, section, group no.)</label>
     <label class="chk"><input type="checkbox" id="key" checked> Answer key page</label>
   </fieldset>
   <label for="seed">Seed</label>
@@ -136,7 +135,7 @@ function nl(a,b,R,solved){
 function sheet(s,p,R,key,start,first,info){
   const items=p.map(([a,b],i)=>`<li><div class="q"><span class="n">${start+i+1}.</span><span>${term(a)} + ${term(b)} =</span><span class="a">${key?fmt(a+b):'&nbsp;'}</span></div>${s.lines?nl(a,b,R,key):''}</li>`).join('');
   return`<section class="sheet">`+(first?`<h2>${esc(s.title)}${key?' — Answer key':''}</h2>`:'')+
-    (first&&!key&&s.name?'<div class="who"><span>Name:</span><span>Date:</span></div>':'')+
+    (first&&!key&&s.name?'<div class="who"><span>Name:</span><span>Date:</span><span>Section:</span><span>Group number:</span></div>':'')+
     (first&&key&&s.lines?'<p class="legend"><b>Blue</b>: start at 0 and move by the first number. <b>Magenta</b>: move by the second number.</p>':'')+
     `<ol class="grid" style="--c:${s.cols}${first?'':';margin-top:0'}">${items}</ol>`+(info?`<div class="pg">${info}</div>`:'')+`</section>`;
 }
@@ -163,7 +162,7 @@ function tex(s,p){
   const line=()=>`\\\\[2pt]\n\\begin{tikzpicture}[scale=${(15/c/(2*R+2)).toFixed(2)}]\\draw[<->](${-R-1},0)--(${R+1},0);\\foreach\\x in{${-R},...,${R}}{\\draw(\\x,.15)--(\\x,-.15);}`+
     (R<=12?`\\foreach\\x in{${-R},...,${R}}\\node[below,font=\\tiny]at(\\x,-.15){$\\x$};`:'\\node[below,font=\\tiny]at(0,-.15){$0$};')+'\\end{tikzpicture}\n';
   let t='\\documentclass[11pt]{article}\n\\usepackage['+PAPER[s.paper][2]+',margin=2cm]{geometry}\n\\usepackage{multicol,enumitem,tikz}\n\\pagestyle{empty}\n\\begin{document}\n'+
-    `\\section*{${te(s.title)}}\n`+(s.name?'Name: \\underline{\\hspace{6cm}} \\hfill Date: \\underline{\\hspace{3cm}}\\\\[1em]\n':'')+
+    `\\section*{${te(s.title)}}\n`+(s.name?'Name: \\underline{\\hspace{7cm}} \\hfill Date: \\underline{\\hspace{3.5cm}}\\\\[0.8em]\nSection: \\underline{\\hspace{6.3cm}} \\hfill Group no.: \\underline{\\hspace{3cm}}\\\\[1em]\n':'')+
     `\\begin{multicols}{${c}}\n\\begin{enumerate}[itemsep=1.2em]\n`;
   p.forEach(([a,b])=>{t+=`\\item $${L(a)}+${L(b)}=$ \\underline{\\hspace{2cm}}\n`+(s.lines?line():'')});
   t+='\\end{enumerate}\n\\end{multicols}\n';
